@@ -37,15 +37,11 @@ var elementsCurrenetlyUsed = [];
 
 const allowedElementSymbols = ["H", "C", "N", "O", "F", "P", "S", "Cl", "Se", "Br", "I", "At"]
 
-function getElement(backFace) {
-  var backText = backFace.innerHTML;
-  var split1 = backText.split("<p>");
-  var split2 = split1[1].split("<span>");
-  var elementName = split2[0];
-  var frontText = backFace.previousElementSibling.innerHTML;
-  var split3 = frontText.split("<strong>");
-  var split4 = split3[1].split("</strong>");
-  var elementSymbol = split4[0];
+function getElement(elementDiv) {
+  var chip = elementDiv.firstElementChild;
+  var frontFace = chip.firstElementChild;
+  var frontChildren = frontFace.children;
+  var elementSymbol = frontChildren[1].innerHTML;
 
   moleculeCharacters = molStr.split("");
 
