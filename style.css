@@ -458,9 +458,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #c6c6c6, #868686);
   background-image: -webkit-linear-gradient(left top, #c6c6c6, #868686);
   background-image: linear-gradient(to right bottom, #c6c6c6, #868686);
+  opacity: 0.35;
 }
 .element-metal .face.back {
   background-color: #c6c6c6;
+  opacity: 0.35;
 }
 
 .element-alkali-metal .front {
@@ -471,9 +473,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #c6d867, #869927);
   background-image: -webkit-linear-gradient(left top, #c6d867, #869927);
   background-image: linear-gradient(to right bottom, #c6d867, #869927);
+  opacity: 0.35;
 }
 .element-alkali-metal .face.back {
   background-color: #d5e38f;
+  opacity: 0.35;
 }
 
 .element-alkali-earth-metal .front {
@@ -484,9 +488,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #8ed5b3, #44b981);
   background-image: -webkit-linear-gradient(left top, #8ed5b3, #44b981);
   background-image: linear-gradient(to right bottom, #8ed5b3, #44b981);
+  opacity: 0.35;
 }
 .element-alkali-earth-metal .face.back {
   background-color: #b3e3cc;
+  opacity: 0.35;
 }
 
 .element-transition-metal .front {
@@ -497,9 +503,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #b0dcfe, #32a5fd);
   background-image: -webkit-linear-gradient(left top, #b0dcfe, #32a5fd);
   background-image: linear-gradient(to right bottom, #b0dcfe, #32a5fd);
+  opacity: 0.35;
 }
 .element-transition-metal .face.back {
   background-color: #b0dcfe;
+  opacity: 0.35;
 }
 
 .element-lanthoid .front {
@@ -510,9 +518,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #ffee3a, #baaa00);
   background-image: -webkit-linear-gradient(left top, #ffee3a, #baaa00);
   background-image: linear-gradient(to right bottom, #ffee3a, #baaa00);
+  opacity: 0.35;
 }
 .element-lanthoid .face.back {
   background-color: #ffee3a;
+  opacity: 0.35;
 }
 
 .element-actinoid .front {
@@ -523,9 +533,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #ffc847, #c78b00);
   background-image: -webkit-linear-gradient(left top, #ffc847, #c78b00);
   background-image: linear-gradient(to right bottom, #ffc847, #c78b00);
+  opacity: 0.35;
 }
 .element-actinoid .face.back {
   background-color: #ffc847;
+  opacity: 0.35;
 }
 
 .element-metalloid .front {
@@ -536,9 +548,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #e58a8a, #c42b2b);
   background-image: -webkit-linear-gradient(left top, #e58a8a, #c42b2b);
   background-image: linear-gradient(to right bottom, #e58a8a, #c42b2b);
+  opacity: 0.35;
 }
 .element-metalloid .face.back {
   background-color: #e58a8a;
+  opacity: 0.35;
 }
 
 .element-non-metal .front {
@@ -575,9 +589,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #adadda, #5555b2);
   background-image: -webkit-linear-gradient(left top, #adadda, #5555b2);
   background-image: linear-gradient(to right bottom, #adadda, #5555b2);
+  opacity: 0.35;
 }
 .element-noble-gas .face.back {
   background-color: #adadda;
+  opacity: 0.35;
 }
 
 .element-lanthanoid-transitional-metal .front {
@@ -588,9 +604,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #4bb0fd, #d3c100);
   background-image: -webkit-linear-gradient(left top, #4bb0fd, #d3c100);
   background-image: linear-gradient(to right bottom, #4bb0fd, #d3c100);
+  opacity: 0.35;
 }
 .element-lanthanoid-transitional-metal .face.back {
   background-color: #b0dcfe;
+  opacity: 0.35;
 }
 
 .element-actinoid-transitional-metal .front {
@@ -601,9 +619,11 @@ span.swatch.element-noble-gas {
   background-image: -moz-linear-gradient(left top, #4bb0fd, #e09d00);
   background-image: -webkit-linear-gradient(left top, #4bb0fd, #e09d00);
   background-image: linear-gradient(to right bottom, #4bb0fd, #e09d00);
+  opacity: 0.35;
 }
 .element-actinoid-transitional-metal .face.back {
   background-color: #b0dcfe;
+  opacity: 0.35;
 }
 
 .element-blank {
