@@ -1,6 +1,3 @@
-
-var database = firebase.database();
-
 var elementsInMolecule = [];
 
 var result = {};
@@ -14,11 +11,11 @@ const molecularFormulaTextBox = document.getElementById("moleculeText");
 var alertIncrement = 0;
 
 const molDict = {
-  "H2O": [962, "H2O", 0],
-  "CH4": [297, "CH4", 0],
-  "NH3": [222, "NH3", 0],
-  "CO2": [280, "CO2", 0],
-  "O3": [24823, "O3", 0]
+  "H2O": [962, "H2O"],
+  "CH4": [297, "CH4"],
+  "NH3": [222, "NH3"],
+  "CO2": [280, "CO2"],
+  "O3": [24823, "O3"]
 }
 
 const elementColorDict = {
@@ -162,8 +159,18 @@ function getStructure() {
       removeElement("molViewer");
       removeElement("moleculeForm");
     }
+    if (molDict.hasOwnProperty(molStr)) {
+      document.getElementById("elementsUsedDiv").style.display="block";
+      addMolFormHeader();
+      addMolViewer("molViewer", "molViewer");
+      window.scrollBy(0, 500);
+      const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(String(molDict[molStr][0]));
+      document.getElementById("molViewer").src = srcCid;
 
-    getMolData();
+      document.getElementById("moleculeForm").innerHTML = "Molecule Formula: " + String(molDict[molStr][1]);
+
+
+    } else { modelMolecule(molStr); }
   }
 }
 
@@ -195,17 +202,8 @@ const modelMolecule = async (formula) => {
   var responseFormula = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/property/MolecularFormula,Charge/JSON");
   var responseFormulaJson = await responseFormula.json();
   var responseFormulaName = responseFormulaJson["PropertyTable"]["Properties"][0]["MolecularFormula"];
-  var responseCharge = responseFormulaJson["PropertyTable"]["Properties"][0]["Charge"]
 
-  var moleculeInfo = "Molecule Formula: " + responseFormulaName;
-
-  if (responseCharge != 0) {
-    moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + responseCharge;
-  }
-
-  writeNewMolecule(formula, cid, responseFormulaName, responseCharge);
-
-  document.getElementById("moleculeForm").innerHTML = moleculeInfo;
+  document.getElementById("moleculeForm").innerHTML = "Molecule Formula: " + responseFormulaName;
 
 }
 
@@ -349,40 +347,7 @@ function debugAlert() {
   alertIncrement++;
 }
 
-function writeNewMolecule(userTypedMol, cidVal, cidMolName, molCharge) {
-  firebase.database().ref('molDict/' + userTypedMol).set({
-    charge: molCharge,
-    molName: cidMolName,
-    cid : cidVal
-  });
-}
 
-const getMolData = async () => {
-  var snapshot = await database.ref("molDict/" + molStr).once("value");
-  if (snapshot.exists()) {
-    var molData = await snapshot.val();
-
-    document.getElementById("elementsUsedDiv").style.display="block";
-    addMolFormHeader();
-    addMolViewer("molViewer", "molViewer");
-
-    window.scrollBy(0, 500);
-    const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(String(molData["cid"]));
-    document.getElementById("molViewer").src = srcCid;
-
-    var moleculeInfo = "Molecule Formula: " + String(molData["molName"]);
-
-    if (molData["charge"] != 0) {
-      moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + String(molData["charge"]);
-    }
-
-    document.getElementById("moleculeForm").innerHTML = moleculeInfo;
-
-  } else {
-    modelMolecule(molStr);
-  }
-
-}
 
 document.getElementById("clear").onclick = clear;
 document.getElementById("create").onclick = getStructure;
