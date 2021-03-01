@@ -186,7 +186,6 @@ const modelMolecule = async (formula) => {
     removeElement("loading");
     swal ( "Invalid Molecular Formula" ,  "This molecule does not exist in the database. Check to make sure that the molecule is typed correctly" ,  "error" );
   } else if (responseCidJson.hasOwnProperty("IdentifierList")) {
-    removeElement("loading");
     document.getElementById("elementsUsedDiv").style.display="block";
     addMolFormHeader();
     addMolViewer("molViewer", "molViewer");
