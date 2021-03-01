@@ -246,8 +246,42 @@ span.swatch {
   text-align: center;
 }
 
-.molViewer {
+.parentViewerDiv {
+  text-align: center;
+  margin-top: 5px;
+  margin-left: 5px;
   display: inline-block;
+}
+
+.molViewer {
+  width: 500px;
+  height: 1500px;
+  position: relative;
+  top: -600px;
+}
+
+.molViewerDiv {
+  position: relative;
+  margin: 0 auto;
+  width: 500px;
+  height: 300px;
+  overflow: hidden;
+}
+
+.closeButton {
+  position: absolute;
+  top:5px;
+  right:5px;
+  box-sizing:border-box;
+  width:20px;
+  height:20px;
+  border-width:3px;
+  border-style: solid;
+  border-color: #931621;
+  border-radius:100%;
+  background: -webkit-linear-gradient(-45deg, transparent 0%, transparent 46%, white 46%,  white 56%,transparent 56%, transparent 100%), -webkit-linear-gradient(45deg, transparent 0%, transparent 46%, white 46%,  white 56%,transparent 56%, transparent 100%);
+  background-color:#931621;
+  transition: all 0.3s ease;
 }
 
 #elementsUsedDiv {

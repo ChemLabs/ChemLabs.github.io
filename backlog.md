@@ -2,4 +2,4 @@
 
 #Enhancements
 Help Menu - URGENT
-Add Support for Multiple Molecules
+Limit to 4 molecules
