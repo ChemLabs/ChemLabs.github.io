@@ -168,7 +168,6 @@ function getStructure() {
 }
 
 const modelMolecule = async (formula) => {
-  addLoading();
   window.scrollBy(0, 500);
   const response = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/formula/".concat(formula, "/JSON?AllowOtherElements=false&MaxRecords=1"));
   const responseJson = await response.json(); //extract JSON from the http response
