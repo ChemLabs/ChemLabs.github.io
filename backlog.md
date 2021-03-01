@@ -2,4 +2,8 @@
 
 #Enhancements
 Help Menu - URGENT
-Add Support for Multiple Molecules
+Limit to 4 molecules
+Give option to have up to five alternative molecules
+Put my name on the bottom copyright
+Add subscript to molecules
+
