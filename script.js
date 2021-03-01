@@ -1,11 +1,18 @@
-//VARIABLE INITIALIZATION
+
 var database = firebase.database();
+
 var elementsInMolecule = [];
+
 var result = {};
+
 var molStr = "";
+
 var lastNum = "";
+
 const molecularFormulaTextBox = document.getElementById("moleculeText");
+
 var alertIncrement = 0;
+
 const molDict = {
   "H2O": [962, "H2O", 0],
   "CH4": [297, "CH4", 0],
@@ -13,6 +20,7 @@ const molDict = {
   "CO2": [280, "CO2", 0],
   "O3": [24823, "O3", 0]
 }
+
 const elementColorDict = {
   "H": "FFFFFF",
   "C": "C3C3C3",
@@ -27,11 +35,11 @@ const elementColorDict = {
   "I": "C721C7",
   "At": "A77B70"
 }
-var elementsCurrentlyUsed = [];
-var moleculesCurrentlyUsed = [];
+
+var elementsCurrenetlyUsed = [];
+
 const allowedElementSymbols = ["H", "C", "N", "O", "F", "P", "S", "Cl", "Se", "Br", "I", "At"]
 
-//Gets the element symbol from element tile on periodic table
 function getElement(elementDiv) {
   var chip = elementDiv.firstElementChild;
   var frontFace = chip.firstElementChild;
@@ -81,13 +89,12 @@ function getElement(elementDiv) {
       molStr += elementSymbol;
     }
 
-  } else {
+  } else if (molStr == "") {
     molecularFormulaTextBox.value += elementSymbol;
     molStr += elementSymbol;
+  } else {
+    alert("Your molecule doesn't make sense.");
   }
-  // } else {
-  //   alert("Your molecule doesn't make sense.");
-  // }
 
 
 
@@ -97,7 +104,6 @@ function getElement(elementDiv) {
 
 }
 
-//Gets the last number of the text box
 function getLastNum(characterNum) {
   var temp = characterNum + 1;
   moleculeCharacters = molStr.split("");
@@ -115,7 +121,6 @@ function getLastNum(characterNum) {
 
 }
 
-//Clears text box
 function clear() {
   molecularFormulaTextBox.value = "";
   molStr = "";
@@ -123,73 +128,47 @@ function clear() {
   elementsInMolecule = [];
 }
 
-//Gets 3d structure of molecule
 function getStructure() {
-  if (moleculesCurrentlyUsed.includes(molStr)) {
-    swal ( "This Molecule has Already been Modeled", "", "error" );
-  } else {
-    //Checks to make sure the molecule is valid
-    var molecules = molStr.split(/(?=[A-Z0-9])/);
-    var validMol = true;
-    molecules.forEach (molChar => {
-      if (isNaN(molChar) && !allowedElementSymbols.includes(molChar)) {
-        validMol = false;
-        return;
-      }
-    });
 
-    if (!validMol) {
-      swal ( "Invalid Molecular Formula" ,  "Check to makes sure this molecule includes no metals, metalloids, or noble gases. Also makes sure that you used proper capitalization for the molecule." ,  "error" );
-    } else {
-
-      if ($('#molViewer').length > 0) {
-        removeElement("molViewerDiv");
-        removeElement("moleculeForm");
-      }
-
-      getMolData();
+  var molecules = molStr.split(/(?=[A-Z0-9])/);
+  var validMol = true;
+  molecules.forEach (molChar => {
+     if (isNaN(molChar) && !allowedElementSymbols.includes(molChar)) {
+       validMol = false;
+       return;
     }
-  }
-}
+  });
 
-//Checks if molecule exists in the database, if not, gets from pubchem
-const getMolData = async () => {
-  addLoading();
-  window.scrollBy(0, 500);
-  var snapshot = await database.ref("molDict/" + molStr).once("value");
-  if (snapshot.exists()) {
-    moleculesCurrentlyUsed.push(molStr);
+  if (!validMol) {
+    swal ( "Invalid Molecular Formula" ,  "Check to makes sure this molecule includes no metals, metalloids, or noble gases. Also makes sure that you used proper capitalization for the molecule." ,  "error" );
+  } else {
 
-    setUniqueMolecules(molStr.split(/(?=[A-Z0-9])/));
-
-    var molData = await snapshot.val();
-    var cid = String(molData["cid"])
+    elementsCurrentlyUsed = [];
+    var moleculeTypeList = molecules.filter(x => isNaN(x)); //List of all molecules, numbers removed
+    var uniqueMolecules = [];
+    $.each(moleculeTypeList, function(i, el){
+        if($.inArray(el, uniqueMolecules) === -1) uniqueMolecules.push(el);
+    });
+    elementsCurrentlyUsed = elementsCurrentlyUsed.concat(uniqueMolecules);
+    elementsCurrentlyUsed.sort();
 
     removeChemElements();
+
     elementsCurrentlyUsed.forEach(molId => addChemElement(molId));
 
-    addMolViewer(cid, molStr);
+    document.getElementById("elementsUsedDiv").style.display="none";
 
-    const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
-    document.getElementById("molViewer" + cid).src = srcCid;
-    removeElement("loading");
-
-    var moleculeInfo = "Molecule Formula: " + String(molData["molName"]);
-
-    if (molData["charge"] != 0) {
-      moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + String(molData["charge"]);
+    if ($('#molViewer').length > 0) {
+      removeElement("molViewer");
+      removeElement("moleculeForm");
     }
 
-    document.getElementById("moleculeForm" + cid).innerHTML = moleculeInfo;
-
-  } else {
-    modelMolecule(molStr);
+    getMolData();
   }
-
 }
 
-//Finding model of molecule from pubchem database
 const modelMolecule = async (formula) => {
+  window.scrollBy(0, 500);
   const response = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/formula/".concat(formula, "/JSON?AllowOtherElements=false&MaxRecords=1"));
   const responseJson = await response.json(); //extract JSON from the http response
   const listKey = responseJson["Waiting"]["ListKey"];
@@ -207,19 +186,13 @@ const modelMolecule = async (formula) => {
     removeElement("loading");
     swal ( "Invalid Molecular Formula" ,  "This molecule does not exist in the database. Check to make sure that the molecule is typed correctly" ,  "error" );
   } else if (responseCidJson.hasOwnProperty("IdentifierList")) {
-    moleculesCurrentlyUsed.push(molStr);
-    setUniqueMolecules(molStr.split(/(?=[A-Z0-9])/));
-
-    removeElement("loading");
-
-    removeChemElements();
-    elementsCurrentlyUsed.forEach(molId => addChemElement(molId));
-
+    document.getElementById("elementsUsedDiv").style.display="block";
+    addMolFormHeader();
+    addMolViewer("molViewer", "molViewer");
     const cid = String(responseCidJson["IdentifierList"]["CID"][0])
-    addMolViewer(cid, molStr);
 
     const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
-    document.getElementById("molViewer" + cid).src = srcCid;
+    document.getElementById("molViewer").src = srcCid;
 
     var responseFormula = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/property/MolecularFormula,Charge/JSON");
     var responseFormulaJson = await responseFormula.json();
@@ -236,14 +209,12 @@ const modelMolecule = async (formula) => {
 
     writeNewMolecule(formula, cid, responseFormulaName, responseCharge);
 
-    document.getElementById("moleculeForm" + cid).innerHTML = moleculeInfo;
+    document.getElementById("moleculeForm").innerHTML = moleculeInfo;
   }
 
 
 }
 
-
-//All numbers auto-subscript
 function fx(e) {
   if (!/[a-zA-Z0-9]+/.test(String.fromCharCode(e.which))) {
     return false;
@@ -273,9 +244,11 @@ function fx(e) {
   }
   return true;
 }
-$("#moleculeText").keypress(fx);
 
-//Deleting text from the text box, making sure to also delete from molStr variable
+function setElementUsed() {
+
+}
+
 molecularFormulaTextBox.onkeydown = function() {
   var key = event.keyCode || event.charCode;
 
@@ -294,14 +267,15 @@ molecularFormulaTextBox.onkeydown = function() {
 
 };
 
-//If the textbox ever empties after key press, clear molStr variable
 molecularFormulaTextBox.onkeyup = function() {
   if (molecularFormulaTextBox.value == "") {
     molStr = "";
   }
 }
 
-//When control or command pressed, stop it, and when enter is pressed, don't do new line but instead run getStructure()
+
+$("#moleculeText").keypress(fx);
+
 $("#moleculeText").keypress(function(event) {
   if (event.keyCode == 13) {
     event.preventDefault();
@@ -313,7 +287,6 @@ $("#moleculeText").keypress(function(event) {
   }
 });
 
-//Command key for mac, don't run it
 $("#moleculeText").keydown(function(e) {
   if (e.metaKey) {
     event.stopPropagation();
@@ -321,98 +294,33 @@ $("#moleculeText").keydown(function(e) {
   }
 });
 
-//Can't drag around text in the box
 molecularFormulaTextBox.ondrop = function preventDrop (e) {
-  e.preventDefault();
+    e.preventDefault();
 };
 
-//Don't allow pasting inside text box
 window.onload = () => {
-  molecularFormulaTextBox.onpaste = e => e.preventDefault();
+ molecularFormulaTextBox.onpaste = e => e.preventDefault();
 }
 
-//Adds a div with everything related to the 3d viewer
-function addMolViewer(elementId, elementName) {
-  var molDiv = document.getElementById("moleculeDiv");
-
-  //Creates first Div to house everything
-  var parentViewerDiv = document.createElement("div");
-  parentViewerDiv.setAttribute("class", "parentViewerDiv");
-  parentViewerDiv.setAttribute("id", "parentViewerDiv" + elementId);
-  molDiv.appendChild(parentViewerDiv);
-
-  //Creates the header inside parentViewerDiv
-  var molHeader = document.createElement("h4");
-  molHeader.setAttribute('id', "moleculeForm" + elementId);
-  molHeader.setAttribute('class', "moleculeName");
-  molHeader.innerHTML = "Molecular Formula: ";
-  parentViewerDiv.appendChild(molHeader);
-
-  //Creates a div just for the iframe
-  var iframeDiv = document.createElement("div");
-  iframeDiv.setAttribute("id", "molViewerDiv" + elementId);
-  iframeDiv.setAttribute("class", "molViewerDiv");
-  parentViewerDiv.appendChild(iframeDiv);
-
-  //Creates the iframe
-  var iframeViewer = document.createElement("iframe");
-  iframeViewer.setAttribute('class', "molViewer");
-  iframeViewer.setAttribute('id', "molViewer" + elementId);
-  iframeViewer.setAttribute("frameborder", "0");
-  iframeDiv.appendChild(iframeViewer);
-
-  //Creates the close button
-  var closeButton = document.createElement("input");
-  var functionName = "removeMolViewer('molId', 'molName')";
-  functionName = functionName.replace("molId", elementId);
-  functionName = functionName.replace("molName", elementName)
-  closeButton.type = "button";
-  closeButton.setAttribute("id", "closeButton" + elementId);
-  closeButton.setAttribute("class", "closeButton");
-  closeButton.setAttribute("onclick", functionName);
-  iframeDiv.appendChild(closeButton);
-
+function addMolViewer(elementId, elementClass) {
+    var p = document.getElementById("moleculeDiv");
+    var newElement = document.createElement("iframe");
+    newElement.setAttribute('id', "molViewer");
+    newElement.setAttribute('class', "molViewer");
+    newElement.setAttribute("style", "width: 500px; height: 300px;")
+    newElement.setAttribute("frameborder", "0");
+    p.appendChild(newElement);
 }
 
-//Removes div with 3d viewer related to specific molecule
-function removeMolViewer(elementId, elementName) {
-  removeElement("parentViewerDiv" + elementId);
-  var updatedMolecules = moleculesCurrentlyUsed.filter(function(elem){
-   return elem != elementName;
-  });
-  moleculesCurrentlyUsed = updatedMolecules;
-
-  setUniqueMolecules(moleculesCurrentlyUsed.join("").split(/(?=[A-Z0-9])/), false);
-  updateHeader();
-
-
+function addMolFormHeader() {
+  var p = document.getElementById("moleculeDiv");
+  var newElement = document.createElement("h4");
+  newElement.setAttribute('id', "moleculeForm");
+  newElement.setAttribute('class', "moleculeName");
+  newElement.innerHTML = "Molecular Formula: ";
+  p.appendChild(newElement);
 }
 
-//Using array of molecule symbols, gets the unique symbols and then sets that to elementsCurrentlyUsed
-//includeCurrentList will either include the elementsCurrentlyUsed list or not
-function setUniqueMolecules(molecules, includeCurrentList = true) {
-  var moleculeTypeList;
-  if (includeCurrentList) {
-    moleculeTypeList = elementsCurrentlyUsed.concat(molecules.filter(x => isNaN(x)));
-  } else {
-    moleculeTypeList = molecules.filter(x => isNaN(x));
-  }
-  //List of all molecules, numbers removed
-  var uniqueMolecules = [];
-  $.each(moleculeTypeList, function(i, el){
-    if($.inArray(el, uniqueMolecules) === -1) uniqueMolecules.push(el);
-  });
-  elementsCurrentlyUsed = uniqueMolecules;
-  elementsCurrentlyUsed.sort();
-}
-
-//Updates the molecular symbol color-coded header
-function updateHeader() {
-  removeChemElements();
-  elementsCurrentlyUsed.forEach(molId => addChemElement(molId));
-}
-
-//Adds loading animation
 function addLoading() {
   var p = document.getElementById("moleculeDiv");
   var newElement = document.createElement("span");
@@ -422,7 +330,6 @@ function addLoading() {
   p.appendChild(newElement);
 }
 
-//Adds each color coded chem symbol to the header
 function addChemElement(elementId) {
   var p = document.getElementById("elementsUsedDiv");
   var newElement = document.createElement("span");
@@ -433,25 +340,56 @@ function addChemElement(elementId) {
   p.appendChild(newElement);
 }
 
-//Clears the header
 function removeChemElements() {
   $("#elementsUsedDiv").empty();
 }
 
-//Removes an html element from the doc, name is confusing but too much work to replace
 function removeElement(elementId) {
-  // Removes an html element from the document
-  var element = document.getElementById(elementId);
-  element.parentNode.removeChild(element);
+    // Removes an element from the document
+    var element = document.getElementById(elementId);
+    element.parentNode.removeChild(element);
 }
 
-//Writing molecule to the databse
+function debugAlert() {
+  alert(alertIncrement);
+  alertIncrement++;
+}
+
 function writeNewMolecule(userTypedMol, cidVal, cidMolName, molCharge) {
   firebase.database().ref('molDict/' + userTypedMol).set({
     charge: molCharge,
     molName: cidMolName,
     cid : cidVal
   });
+}
+
+const getMolData = async () => {
+  addLoading();
+  var snapshot = await database.ref("molDict/" + molStr).once("value");
+  if (snapshot.exists()) {
+    var molData = await snapshot.val();
+
+    document.getElementById("elementsUsedDiv").style.display="block";
+    addMolFormHeader();
+    addMolViewer("molViewer", "molViewer");
+
+    window.scrollBy(0, 500);
+    const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(String(molData["cid"]));
+    document.getElementById("molViewer").src = srcCid;
+    removeElement("loading");
+
+    var moleculeInfo = "Molecule Formula: " + String(molData["molName"]);
+
+    if (molData["charge"] != 0) {
+      moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + String(molData["charge"]);
+    }
+
+    document.getElementById("moleculeForm").innerHTML = moleculeInfo;
+
+  } else {
+    modelMolecule(molStr);
+  }
+
 }
 
 document.getElementById("clear").onclick = clear;
