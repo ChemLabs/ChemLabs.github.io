@@ -85,13 +85,6 @@ function getElement(elementDiv) {
     molecularFormulaTextBox.value += elementSymbol;
     molStr += elementSymbol;
   }
-  // } else {
-  //   alert("Your molecule doesn't make sense.");
-  // }
-
-
-
-  moleculeName = createCompound();
 
   molecularFormulaTextBox.style.color = "#eee";
 
@@ -127,6 +120,7 @@ function clear() {
 function getStructure() {
   if (moleculesCurrentlyUsed.includes(molStr)) {
     swal ( "This Molecule has Already been Modeled", "", "error" );
+  } else if (molStr == "") {
   } else {
     //Checks to make sure the molecule is valid
     var molecules = molStr.split(/(?=[A-Z0-9])/);
