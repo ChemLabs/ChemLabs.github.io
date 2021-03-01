@@ -183,29 +183,36 @@ const modelMolecule = async (formula) => {
     //document.getElementById("json").textContent = JSON.stringify(responseCidJson, undefined, 2);
   }
 
-  removeElement("loading");
-  document.getElementById("elementsUsedDiv").style.display="block";
-  addMolFormHeader();
-  addMolViewer("molViewer", "molViewer");
-  const cid = String(responseCidJson["IdentifierList"]["CID"][0])
+  if (responseCidJson.hasOwnProperty("Fault")) {
+    removeElement("loading");
+    swal ( "Invalid Molecular Formula" ,  "This molecule does not exist in the database. Check to make sure that the molecule is typed correctly" ,  "error" );
+  } else if (responseCidJson.hasOwnProperty("IdentifierList")) {
+    document.getElementById("elementsUsedDiv").style.display="block";
+    addMolFormHeader();
+    addMolViewer("molViewer", "molViewer");
+    const cid = String(responseCidJson["IdentifierList"]["CID"][0])
 
-  const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
-  document.getElementById("molViewer").src = srcCid;
+    const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
+    document.getElementById("molViewer").src = srcCid;
 
-  var responseFormula = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/property/MolecularFormula,Charge/JSON");
-  var responseFormulaJson = await responseFormula.json();
-  var responseFormulaName = responseFormulaJson["PropertyTable"]["Properties"][0]["MolecularFormula"];
-  var responseCharge = responseFormulaJson["PropertyTable"]["Properties"][0]["Charge"]
+    var responseFormula = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/property/MolecularFormula,Charge/JSON");
+    var responseFormulaJson = await responseFormula.json();
+    //document.getElementById("json").textContent = JSON.stringify(responseFormulaJson, undefined, 2);
 
-  var moleculeInfo = "Molecule Formula: " + responseFormulaName;
+    var responseFormulaName = responseFormulaJson["PropertyTable"]["Properties"][0]["MolecularFormula"];
+    var responseCharge = responseFormulaJson["PropertyTable"]["Properties"][0]["Charge"]
 
-  if (responseCharge != 0) {
-    moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + responseCharge;
+    var moleculeInfo = "Molecule Formula: " + responseFormulaName;
+
+    if (responseCharge != 0) {
+      moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + responseCharge;
+    }
+
+    writeNewMolecule(formula, cid, responseFormulaName, responseCharge);
+
+    document.getElementById("moleculeForm").innerHTML = moleculeInfo;
   }
 
-  writeNewMolecule(formula, cid, responseFormulaName, responseCharge);
-
-  document.getElementById("moleculeForm").innerHTML = moleculeInfo;
 
 }
 
@@ -358,6 +365,7 @@ function writeNewMolecule(userTypedMol, cidVal, cidMolName, molCharge) {
 }
 
 const getMolData = async () => {
+  addLoading();
   var snapshot = await database.ref("molDict/" + molStr).once("value");
   if (snapshot.exists()) {
     var molData = await snapshot.val();
@@ -369,6 +377,7 @@ const getMolData = async () => {
     window.scrollBy(0, 500);
     const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(String(molData["cid"]));
     document.getElementById("molViewer").src = srcCid;
+    removeElement("loading");
 
     var moleculeInfo = "Molecule Formula: " + String(molData["molName"]);
 
