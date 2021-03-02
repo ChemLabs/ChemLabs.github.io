@@ -1,5 +1,4 @@
 #Bugs
-Some molecules are unable to be modeled with molview, returns a 400 or 404 error
 
 #Enhancements
 Help Menu - URGENT
