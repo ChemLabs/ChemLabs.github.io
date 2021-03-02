@@ -118,12 +118,13 @@ function clear() {
 
 //Gets 3d structure of molecule
 function getStructure() {
-  if (moleculesCurrentlyUsed.includes(molStr)) {
+  var formula = molStr;
+  if (moleculesCurrentlyUsed.includes(formula)) {
     swal ( "This Molecule has Already been Modeled", "", "error" );
-  } else if (molStr == "") {
+  } else if (formula == "") {
   } else {
     //Checks to make sure the molecule is valid
-    var molecules = molStr.split(/(?=[A-Z0-9])/);
+    var molecules = formula.split(/(?=[A-Z0-9])/);
     var validMol = true;
     molecules.forEach (molChar => {
       if (isNaN(molChar) && !allowedElementSymbols.includes(molChar)) {
@@ -141,20 +142,20 @@ function getStructure() {
         removeElement("moleculeForm");
       }
 
-      getMolData();
+      getMolData(formula);
     }
   }
 }
 
 //Checks if molecule exists in the database, if not, gets from pubchem
-const getMolData = async () => {
+const getMolData = async (formula) => {
   addLoading();
   window.scrollBy(0, 500);
-  var snapshot = await database.ref("molDict/" + molStr).once("value");
+  var snapshot = await database.ref("molDict/" + formula).once("value");
   if (snapshot.exists()) {
-    moleculesCurrentlyUsed.push(molStr);
+    moleculesCurrentlyUsed.push(formula);
 
-    setUniqueMolecules(molStr.split(/(?=[A-Z0-9])/));
+    setUniqueMolecules(formula.split(/(?=[A-Z0-9])/));
 
     var molData = await snapshot.val();
     var cid = String(molData["cid"])
@@ -162,13 +163,20 @@ const getMolData = async () => {
     removeChemElements();
     elementsCurrentlyUsed.forEach(molId => addChemElement(molId));
 
-    addMolViewer(cid, molStr);
+    addMolViewer(cid, formula);
 
     const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
+
     document.getElementById("molViewer" + cid).src = srcCid;
+
     removeElement("loading");
 
-    var moleculeInfo = "Molecule Formula: " + String(molData["molName"]);
+    var molFormulaSplit = String(molData["molName"]).split(/([+-])/g);
+    var molFormulaFormatted = molFormulaSplit[0].replace(/(\d+)/g, '<sub>$1</sub>');
+    molFormulaSplit.shift();
+    var chargeFormatted = "<sup>" + molFormulaSplit.join("") + "</sup>";
+
+    var moleculeInfo = "Molecule Formula: " + molFormulaFormatted + chargeFormatted;
 
     if (molData["charge"] != 0) {
       moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + String(molData["charge"]);
@@ -177,7 +185,7 @@ const getMolData = async () => {
     document.getElementById("moleculeForm" + cid).innerHTML = moleculeInfo;
 
   } else {
-    modelMolecule(molStr);
+    modelMolecule(formula);
   }
 
 }
@@ -201,36 +209,53 @@ const modelMolecule = async (formula) => {
     removeElement("loading");
     swal ( "Invalid Molecular Formula" ,  "This molecule does not exist in the database. Check to make sure that the molecule is typed correctly" ,  "error" );
   } else if (responseCidJson.hasOwnProperty("IdentifierList")) {
-    moleculesCurrentlyUsed.push(molStr);
-    setUniqueMolecules(molStr.split(/(?=[A-Z0-9])/));
-
-    removeElement("loading");
-
-    removeChemElements();
-    elementsCurrentlyUsed.forEach(molId => addChemElement(molId));
 
     const cid = String(responseCidJson["IdentifierList"]["CID"][0])
-    addMolViewer(cid, molStr);
 
-    const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
-    document.getElementById("molViewer" + cid).src = srcCid;
+    var response3d = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/json?record_type=3d");
+    var response3dJson = await response3d.json();
 
-    var responseFormula = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/property/MolecularFormula,Charge/JSON");
-    var responseFormulaJson = await responseFormula.json();
-    //document.getElementById("json").textContent = JSON.stringify(responseFormulaJson, undefined, 2);
 
-    var responseFormulaName = responseFormulaJson["PropertyTable"]["Properties"][0]["MolecularFormula"];
-    var responseCharge = responseFormulaJson["PropertyTable"]["Properties"][0]["Charge"]
+    if (response3dJson.hasOwnProperty("Fault")) {
+      removeElement("loading");
+      swal ( "Could not get 3D Model" ,  "The 3D model for this molecule is either unavailable or not working" ,  "error" );
+    } else {
 
-    var moleculeInfo = "Molecule Formula: " + responseFormulaName;
+      moleculesCurrentlyUsed.push(formula);
+      setUniqueMolecules(formula.split(/(?=[A-Z0-9])/));
 
-    if (responseCharge != 0) {
-      moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + responseCharge;
+      removeElement("loading");
+
+      removeChemElements();
+      elementsCurrentlyUsed.forEach(molId => addChemElement(molId));
+
+      addMolViewer(cid, formula);
+
+      const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
+      document.getElementById("molViewer" + cid).src = srcCid;
+
+      var responseFormula = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/property/MolecularFormula,Charge/JSON");
+      var responseFormulaJson = await responseFormula.json();
+      //document.getElementById("json").textContent = JSON.stringify(responseFormulaJson, undefined, 2);
+
+      var responseFormulaName = responseFormulaJson["PropertyTable"]["Properties"][0]["MolecularFormula"];
+      var responseCharge = responseFormulaJson["PropertyTable"]["Properties"][0]["Charge"]
+
+      var molFormulaSplit = responseFormulaName.split(/([+-])/g);
+      var molFormulaFormatted = molFormulaSplit[0].replace(/(\d+)/g, '<sub>$1</sub>')
+      molFormulaSplit.shift();
+      var chargeFormatted = "<sup>" + molFormulaSplit.join("") + "</sup>";
+
+      var moleculeInfo = "Molecule Formula: " + molFormulaFormatted + chargeFormatted;
+
+      if (responseCharge != 0) {
+        moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + responseCharge;
+      }
+
+      writeNewMolecule(formula, cid, responseFormulaName, responseCharge);
+
+      document.getElementById("moleculeForm" + cid).innerHTML = moleculeInfo;
     }
-
-    writeNewMolecule(formula, cid, responseFormulaName, responseCharge);
-
-    document.getElementById("moleculeForm" + cid).innerHTML = moleculeInfo;
   }
 
 
