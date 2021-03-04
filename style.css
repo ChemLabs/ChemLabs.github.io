@@ -1,8 +1,3 @@
-/* -------------------
-*Author:			Brady Sammons
-*Version:			1.0.0
-*Website:			bradysammons.com
--------------------- */
 @import url('https://fonts.googleapis.com/css?family=Tauri|Varela+Round');
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
@@ -244,6 +239,13 @@ span.swatch {
 
 #moleculeDiv {
   text-align: center;
+}
+
+#copyright {
+  text-align: right;
+  color: #B6B6B6;
+  margin-right: 10px;
+  line-height: 1.5;
 }
 
 .parentViewerDiv {
