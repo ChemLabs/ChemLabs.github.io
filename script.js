@@ -5,7 +5,6 @@ var result = {};
 var molStr = "";
 var lastNum = "";
 const molecularFormulaTextBox = document.getElementById("moleculeText");
-var alertIncrement = 0;
 const molDict = {
   "H2O": [962, "H2O", 0],
   "CH4": [297, "CH4", 0],
@@ -159,13 +158,19 @@ const getMolData = async (formula) => {
 
     var molData = await snapshot.val();
     var cid = String(molData["cid"])
-
+    var InChIKey = String(molData["InChIKey"]);
     removeChemElements();
     elementsCurrentlyUsed.forEach(molId => addChemElement(molId));
 
     addMolViewer(cid, formula);
 
-    const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
+    var srcCid;
+
+    if (InChIKey == "doesNotExist") {
+      srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
+    } else {
+      srcCid = "https://embed.molview.org/v1/?mode=balls&smiles=".concat(InChIKey);
+    }
 
     document.getElementById("molViewer" + cid).src = srcCid;
 
@@ -204,6 +209,7 @@ const modelMolecule = async (formula) => {
     responseCidJson = await responseCid.json();
     //document.getElementById("json").textContent = JSON.stringify(responseCidJson, undefined, 2);
   }
+  //document.getElementById("json").textContent = JSON.stringify(responseCidJson, undefined, 2);
 
   if (responseCidJson.hasOwnProperty("Fault")) {
     removeElement("loading");
@@ -211,15 +217,6 @@ const modelMolecule = async (formula) => {
   } else if (responseCidJson.hasOwnProperty("IdentifierList")) {
 
     const cid = String(responseCidJson["IdentifierList"]["CID"][0])
-
-    var response3d = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/json?record_type=3d");
-    var response3dJson = await response3d.json();
-
-
-    if (response3dJson.hasOwnProperty("Fault")) {
-      removeElement("loading");
-      swal ( "Could not get 3D Model" ,  "The 3D model for this molecule is either unavailable or not working" ,  "error" );
-    } else {
 
       moleculesCurrentlyUsed.push(formula);
       setUniqueMolecules(formula.split(/(?=[A-Z0-9])/));
@@ -231,15 +228,30 @@ const modelMolecule = async (formula) => {
 
       addMolViewer(cid, formula);
 
-      const srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
-      document.getElementById("molViewer" + cid).src = srcCid;
 
-      var responseFormula = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/property/MolecularFormula,Charge/JSON");
+      var responseFormula = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/property/MolecularFormula,Charge,InChIKey/JSON");
       var responseFormulaJson = await responseFormula.json();
       //document.getElementById("json").textContent = JSON.stringify(responseFormulaJson, undefined, 2);
 
       var responseFormulaName = responseFormulaJson["PropertyTable"]["Properties"][0]["MolecularFormula"];
-      var responseCharge = responseFormulaJson["PropertyTable"]["Properties"][0]["Charge"]
+      var responseCharge = responseFormulaJson["PropertyTable"]["Properties"][0]["Charge"];
+      var responseInChIKey = responseFormulaJson["PropertyTable"]["Properties"][0]["InChIKey"];
+
+      var response3d = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/json?record_type=3d");
+      var response3dJson = await response3d.json();
+
+      var srcCid;
+
+      if (response3dJson.hasOwnProperty("Fault")) {
+        srcCid = "https://embed.molview.org/v1/?mode=balls&smiles=".concat(responseInChIKey);
+        writeNewMolecule(formula, cid, responseFormulaName, responseCharge, responseInChIKey);
+      } else {
+        srcCid = "https://embed.molview.org/v1/?mode=balls&cid=".concat(cid);
+        writeNewMolecule(formula, cid, responseFormulaName, responseCharge);
+      }
+
+      document.getElementById("molViewer" + cid).src = srcCid;
+
 
       var molFormulaSplit = responseFormulaName.split(/([+-])/g);
       var molFormulaFormatted = molFormulaSplit[0].replace(/(\d+)/g, '<sub>$1</sub>')
@@ -252,10 +264,9 @@ const modelMolecule = async (formula) => {
         moleculeInfo += '\xa0\xa0\xa0\xa0\xa0\xa0\xa0' + "Charge: " + responseCharge;
       }
 
-      writeNewMolecule(formula, cid, responseFormulaName, responseCharge);
 
       document.getElementById("moleculeForm" + cid).innerHTML = moleculeInfo;
-    }
+
   }
 
 
@@ -465,11 +476,12 @@ function removeElement(elementId) {
 }
 
 //Writing molecule to the databse
-function writeNewMolecule(userTypedMol, cidVal, cidMolName, molCharge) {
+function writeNewMolecule(userTypedMol, cidVal, cidMolName, molCharge, InChIKeyVal="doesNotExist") {
   firebase.database().ref('molDict/' + userTypedMol).set({
     charge: molCharge,
     molName: cidMolName,
-    cid : cidVal
+    cid : cidVal,
+    InChIKey: InChIKeyVal
   });
 }
 
