@@ -17,7 +17,7 @@ const elementColorDict = {
   "C": "C3C3C3",
   "N": "567BFF",
   "O": "FF302F",
-  "F": "C4FF7B",
+  "F": "567BFF",
   "P": "FFB521",
   "S": "FDFF53",
   "Cl": "40FF43",
